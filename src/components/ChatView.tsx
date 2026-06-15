@@ -1,33 +1,32 @@
 import * as React from "react"
-import { Bot, FileText, Send, Sparkles, User } from "lucide-react"
+import { Bot, FileText, Send, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
 import { MessageContent } from "@/components/MessageContent"
-import { answer, suggestedQuestions, type Citation } from "@/lib/assistant"
-import { useStore } from "@/store"
+import { answer, suggestedQuestions } from "@/lib/assistant"
+import { useStore, type ChatMessage } from "@/store"
 import { cn } from "@/lib/utils"
-
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  text: string
-  citations: Citation[]
-  confidence?: "alta" | "media" | "nessuna"
-}
 
 let idSeq = 0
 const nextId = () => `msg-${idSeq++}`
 
 export function ChatView({ onOpenDoc }: { onOpenDoc: (docId: string) => void }) {
-  const { docs } = useStore()
-  const [messages, setMessages] = React.useState<Message[]>([])
+  const {
+    docs,
+    conversations,
+    activeChatId,
+    createChat,
+    appendMessage,
+  } = useStore()
   const [input, setInput] = React.useState("")
   const [thinking, setThinking] = React.useState(false)
   const viewportRef = React.useRef<HTMLDivElement>(null)
 
+  const activeChat = conversations.find((c) => c.id === activeChatId) ?? null
+  const messages = activeChat?.messages ?? []
   const started = messages.length > 0
 
   const scrollToBottom = React.useCallback(() => {
@@ -43,28 +42,27 @@ export function ChatView({ onOpenDoc }: { onOpenDoc: (docId: string) => void }) 
     const trimmed = question.trim()
     if (!trimmed || thinking) return
 
-    const userMsg: Message = {
+    const chatId = activeChatId ?? createChat()
+
+    const userMsg: ChatMessage = {
       id: nextId(),
       role: "user",
       text: trimmed,
       citations: [],
     }
-    setMessages((prev) => [...prev, userMsg])
+    appendMessage(chatId, userMsg)
     setInput("")
     setThinking(true)
 
     const result = answer(trimmed, docs)
     window.setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: nextId(),
-          role: "assistant",
-          text: result.text,
-          citations: result.citations,
-          confidence: result.confidence,
-        },
-      ])
+      appendMessage(chatId, {
+        id: nextId(),
+        role: "assistant",
+        text: result.text,
+        citations: result.citations,
+        confidence: result.confidence,
+      })
       setThinking(false)
     }, 650)
   }
@@ -120,14 +118,11 @@ export function ChatView({ onOpenDoc }: { onOpenDoc: (docId: string) => void }) 
       <div className="flex h-full flex-col items-center justify-center px-4">
         <div className="w-full max-w-2xl">
           <div className="mb-8 flex flex-col items-center text-center">
-            <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Sparkles className="size-6" />
-            </div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Assistente Aziendale
             </h1>
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-              il sapere aziendale in un unico tool
+              il sapere aziendale in un' unica chat
             </p>
           </div>
 
@@ -141,18 +136,6 @@ export function ChatView({ onOpenDoc }: { onOpenDoc: (docId: string) => void }) 
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-3 border-b border-border px-4 py-4 sm:px-6">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Sparkles className="size-5" />
-        </div>
-        <div>
-          <h1 className="text-sm font-semibold">Assistente Aziendale</h1>
-          <p className="text-xs text-muted-foreground">
-            Risponde dai {docs.length} documenti in base di conoscenza
-          </p>
-        </div>
-      </header>
-
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
           {messages.map((msg) => (
@@ -173,8 +156,7 @@ export function ChatView({ onOpenDoc }: { onOpenDoc: (docId: string) => void }) 
       <div className="border-t border-border px-4 py-4 sm:px-6">
         <div className="mx-auto max-w-3xl">{inputBar}</div>
         <p className="mx-auto mt-2 max-w-3xl text-center text-[11px] text-muted-foreground">
-          Le risposte sono generate dai documenti interni. Verifica sempre le
-          informazioni.
+          Le risposte sono generate dai documenti interni. E' necessario che le domande siano formulate in italiano. Verifica sempre quello che scrivi
         </p>
       </div>
     </div>
@@ -185,7 +167,7 @@ function MessageBubble({
   msg,
   onOpenDoc,
 }: {
-  msg: Message
+  msg: ChatMessage
   onOpenDoc: (docId: string) => void
 }) {
   const isUser = msg.role === "user"

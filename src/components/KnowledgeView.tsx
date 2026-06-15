@@ -13,6 +13,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -39,6 +47,9 @@ export function KnowledgeView({
   const [selectedId, setSelectedId] = React.useState<string | null>(focusDocId)
   const [adding, setAdding] = React.useState(false)
   const [prevFocus, setPrevFocus] = React.useState(focusDocId)
+  const [pendingDelete, setPendingDelete] = React.useState<KnowledgeDoc | null>(
+    null
+  )
 
   // When the parent requests a specific document (e.g. from a citation),
   // open it — adjusting state during render instead of in an effect.
@@ -60,20 +71,12 @@ export function KnowledgeView({
   }
 
   if (selected) {
-    return <DocDetail doc={selected} onBack={back} onRemove={removeDoc} />
+    return <DocDetail doc={selected} onBack={back} />
   }
-
-  const categories = Array.from(new Set(docs.map((d) => d.category)))
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
-        <div>
-          <h1 className="text-sm font-semibold">Base di conoscenza</h1>
-          <p className="text-xs text-muted-foreground">
-            {docs.length} documenti · {categories.length} categorie
-          </p>
-        </div>
+      <header className="flex items-center justify-start px-4 py-4 sm:px-6">
         <Button size="sm" onClick={() => setAdding(true)}>
           <Plus className="size-4" />
           Aggiungi documento
@@ -83,11 +86,31 @@ export function KnowledgeView({
       <ScrollArea className="flex-1">
         <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 xl:grid-cols-3">
           {docs.map((doc) => (
-            <button
+            <div
               key={doc.id}
+              role="button"
+              tabIndex={0}
               onClick={() => setSelectedId(doc.id)}
-              className="text-left"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  setSelectedId(doc.id)
+                }
+              }}
+              className="group relative cursor-pointer text-left"
             >
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Elimina documento"
+                className="absolute -right-3 -top-3 z-10 size-10 rounded-full border border-border bg-background text-muted-foreground opacity-0 shadow-sm transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPendingDelete(doc)
+                }}
+              >
+                <Trash2 className="size-5" />
+              </Button>
               <Card className="h-full gap-3 py-5 transition-all hover:border-primary/50 hover:shadow-md">
                 <CardHeader className="px-5">
                   <div className="mb-2 flex items-center justify-between">
@@ -113,10 +136,42 @@ export function KnowledgeView({
                   </div>
                 </CardContent>
               </Card>
-            </button>
+            </div>
           ))}
         </div>
       </ScrollArea>
+
+      <Dialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null)
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Eliminare il documento?</DialogTitle>
+            <DialogDescription>
+              «{pendingDelete?.title}» verrà rimosso dalla base di conoscenza.
+              L'azione non può essere annullata.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingDelete(null)}>
+              Annulla
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (pendingDelete) removeDoc(pendingDelete.id)
+                setPendingDelete(null)
+              }}
+            >
+              <Trash2 className="size-4" />
+              Elimina
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -124,11 +179,9 @@ export function KnowledgeView({
 function DocDetail({
   doc,
   onBack,
-  onRemove,
 }: {
   doc: KnowledgeDoc
   onBack: () => void
-  onRemove: (id: string) => void
 }) {
   return (
     <div className="flex h-full flex-col">
@@ -142,17 +195,6 @@ function DocDetail({
             {doc.category} · {doc.author} · aggiornato il {doc.updatedAt}
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-destructive"
-          onClick={() => {
-            onRemove(doc.id)
-            onBack()
-          }}
-        >
-          <Trash2 className="size-4" />
-        </Button>
       </header>
 
       <ScrollArea className="flex-1">

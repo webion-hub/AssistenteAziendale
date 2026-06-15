@@ -101,7 +101,7 @@ export const seedDocs: KnowledgeDoc[] = [
       {
         id: "pr-build",
         heading: "Verifica che il progetto builda",
-        body: "Esegui sempre `npm run build` e `npm run lint` in locale prima di pushare. Una PR non si apre se la build fallisce o ci sono errori di lint/type-check. La CI deve essere verde.",
+        body: "Esegui sempre `npm run build` e `npm run lint` in locale prima di pushare. Una PR non si apre se la build fallisce o ci sono errori di lint/type-check.",
         tags: ["build", "builda", "compila", "lint", "type-check", "ci", "test", "verde", "pr", "pull request"],
       },
       {
