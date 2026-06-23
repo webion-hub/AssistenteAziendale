@@ -17,6 +17,10 @@ dist-ssr
 out/
 next-env.d.ts
 
+# TypeScript incremental build cache (generated; breaks Nixpacks cache mount)
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
 # Env / secrets
 .env
 .env.*
