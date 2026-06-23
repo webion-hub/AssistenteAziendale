@@ -62,7 +62,7 @@ export function retrieve(query: string, docs: KnowledgeDoc[]): ScoredSnippet[] {
   return scored
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
+    .slice(0, 5)
 }
 
 export function answer(query: string, docs: KnowledgeDoc[]): AssistantAnswer {

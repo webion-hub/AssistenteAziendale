@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useStore } from "@/store"
+import { analyzeDoc } from "@/lib/api"
 import type { KnowledgeDoc, SourceType } from "@/data/knowledge"
 import { cn } from "@/lib/utils"
 
@@ -126,7 +127,7 @@ export function KnowledgeView({
                 </CardHeader>
                 <CardContent className="px-5">
                   <p className="line-clamp-2 text-xs text-muted-foreground">
-                    {doc.snippets[0]?.body}
+                    {doc.summary || doc.snippets[0]?.body}
                   </p>
                   <div className="mt-3 flex items-center gap-2">
                     <Badge variant="secondary">{doc.category}</Badge>
@@ -245,15 +246,24 @@ function AddDocForm({ onDone }: { onDone: () => void }) {
   const [body, setBody] = React.useState("")
   const [dragging, setDragging] = React.useState(false)
   const [fileName, setFileName] = React.useState<string | null>(null)
+  const [fileData, setFileData] = React.useState<{
+    data: string
+    mediaType: string
+  } | null>(null)
+  const [analyzing, setAnalyzing] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const readFile = (file: File) => {
     setFileName(file.name)
+    setError(null)
     if (!title) setTitle(file.name.replace(/\.[^.]+$/, ""))
 
     const ext = file.name.split(".").pop()?.toLowerCase()
     const isText = file.type.startsWith("text") || ["txt", "md", "csv", "json"].includes(ext ?? "")
 
+    // Text files: read the content directly, no AI extraction needed.
     if (isText) {
+      setFileData(null)
       setSourceType(ext === "md" ? "markdown" : "text")
       const reader = new FileReader()
       reader.onload = () => setBody(String(reader.result ?? ""))
@@ -261,18 +271,20 @@ function AddDocForm({ onDone }: { onDone: () => void }) {
       return
     }
 
-    if (file.type.startsWith("image")) {
-      setSourceType("image")
-      setBody(
-        `Testo estratto da immagine "${file.name}" (OCR simulato).\n\nIn produzione qui comparirebbe il testo riconosciuto dall'immagine. Per la demo, incolla o digita manualmente il contenuto da indicizzare.`
-      )
-      return
+    // PDF / images: keep the bytes (base64) so Claude can read them on save.
+    const isImage = file.type.startsWith("image")
+    setSourceType(isImage ? "image" : "pdf")
+    setBody("")
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = String(reader.result ?? "")
+      const base64 = result.split(",")[1] ?? ""
+      setFileData({
+        data: base64,
+        mediaType: isImage ? file.type || "image/png" : "application/pdf",
+      })
     }
-
-    setSourceType("pdf")
-    setBody(
-      `Testo estratto dal PDF "${file.name}" (estrazione simulata).\n\nIn produzione il contenuto del PDF verrebbe estratto e segmentato automaticamente. Per la demo, incolla o digita manualmente il contenuto da indicizzare.`
-    )
+    reader.readAsDataURL(file)
   }
 
   const onDrop = (e: React.DragEvent) => {
@@ -282,11 +294,48 @@ function AddDocForm({ onDone }: { onDone: () => void }) {
     if (file) readFile(file)
   }
 
-  const canSave = title.trim().length > 0 && body.trim().length > 0
+  // Use the uploaded file unless the user typed text (text wins if present).
+  const useFile = Boolean(fileData) && body.trim().length === 0
+  const canSave = title.trim().length > 0 && (body.trim().length > 0 || useFile)
 
-  const save = () => {
-    if (!canSave) return
-    addDoc({ title: title.trim(), category: category.trim(), sourceType, body })
+  const save = async () => {
+    if (!canSave || analyzing) return
+    setAnalyzing(true)
+    setError(null)
+
+    let analysis: Awaited<ReturnType<typeof analyzeDoc>> | null
+    try {
+      analysis = await analyzeDoc(
+        useFile
+          ? { title: title.trim(), file: fileData! }
+          : { title: title.trim(), body }
+      )
+    } catch (err) {
+      analysis = null
+      // For files we need the extracted content, so surface the error instead
+      // of saving an empty document. For text we can still save as-is.
+      if (useFile) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Impossibile analizzare il file."
+        )
+        setAnalyzing(false)
+        return
+      }
+    }
+
+    const finalBody = useFile ? analysis?.content ?? "" : body
+
+    addDoc({
+      title: title.trim(),
+      category: category.trim() || analysis?.category || "",
+      sourceType,
+      body: finalBody,
+      summary: analysis?.summary,
+      aiTags: analysis?.tags,
+    })
+    setAnalyzing(false)
     onDone()
   }
 
@@ -371,17 +420,24 @@ function AddDocForm({ onDone }: { onDone: () => void }) {
               className="min-h-52"
             />
             <p className="text-[11px] text-muted-foreground">
-              Il testo viene segmentato in sezioni (separate da righe vuote) e
-              reso ricercabile dall'assistente.
+              {useFile
+                ? `Il contenuto verrà estratto automaticamente dall'AI dal file «${fileName}» al salvataggio. Puoi anche scrivere qui del testo per ignorare il file.`
+                : "Il testo viene segmentato in sezioni (separate da righe vuote) e reso ricercabile dall'assistente."}
             </p>
           </div>
+
+          {error && (
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              ⚠️ {error}
+            </p>
+          )}
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onDone}>
               Annulla
             </Button>
-            <Button disabled={!canSave} onClick={save}>
-              Aggiungi alla conoscenza
+            <Button disabled={!canSave || analyzing} onClick={save}>
+              {analyzing ? "Analisi in corso…" : "Aggiungi alla conoscenza"}
             </Button>
           </div>
         </div>
