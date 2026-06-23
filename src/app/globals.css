@@ -110,3 +110,103 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+/* ── Logo animation ─────────────────────────────────────────────────────── */
+/* Rotate SVG groups around the compass centre (100,100) rather than their own
+   bounding box, so the star and needle pivot on the same point. */
+.logo-pivot {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+}
+
+/* The needle hunts for a bearing: swings right, recalibrates, swings left,
+   recalibrates — like a real compass settling, never a full circle. */
+@keyframes logo-seek {
+  0% {
+    transform: rotate(0deg);
+  }
+  12% {
+    transform: rotate(46deg); /* swing right */
+  }
+  20% {
+    transform: rotate(34deg); /* recalibrate */
+  }
+  30% {
+    transform: rotate(41deg);
+  }
+  44% {
+    transform: rotate(40deg); /* hold */
+  }
+  56% {
+    transform: rotate(-45deg); /* swing left */
+  }
+  64% {
+    transform: rotate(-33deg); /* recalibrate */
+  }
+  74% {
+    transform: rotate(-40deg);
+  }
+  88% {
+    transform: rotate(-39deg); /* hold */
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Calm idle version of the seek — a gentle left/right sway. */
+@keyframes logo-sway {
+  0%,
+  100% {
+    transform: rotate(-16deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}
+
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+/* ── React-Bits style text/background effects ───────────────────────────── */
+@keyframes gradient-pan {
+  to {
+    background-position: 200% center;
+  }
+}
+
+@keyframes text-shine {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(6%, -8%, 0) scale(1.12);
+  }
+  66% {
+    transform: translate3d(-7%, 5%, 0) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-pivot,
+  .animate-logo-float {
+    animation: none !important;
+  }
+}

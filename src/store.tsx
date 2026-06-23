@@ -7,6 +7,9 @@ interface NewDocInput {
   category: string
   sourceType: SourceType
   body: string
+  // Optional enrichment from the document-analysis AI.
+  summary?: string
+  aiTags?: string[]
 }
 
 export interface ChatMessage {
@@ -70,6 +73,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const addDoc = React.useCallback((input: NewDocInput) => {
     const id = `doc-${input.title.toLowerCase().replace(/\s+/g, "-").slice(0, 20)}-${docCounter()}`
+    const snippets = chunk(input.body, input.title)
+    // Fold the AI-suggested tags into every snippet so retrieval picks them up.
+    const aiTags = input.aiTags ?? []
+    if (aiTags.length > 0) {
+      for (const s of snippets) {
+        s.tags = Array.from(new Set([...s.tags, ...aiTags])).slice(0, 40)
+      }
+    }
     const newDoc: KnowledgeDoc = {
       id,
       title: input.title,
@@ -77,7 +88,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sourceType: input.sourceType,
       author: "Caricato da te",
       updatedAt: new Date().toISOString().slice(0, 10),
-      snippets: chunk(input.body, input.title),
+      snippets,
+      summary: input.summary,
     }
     setDocs((prev) => [newDoc, ...prev])
   }, [])

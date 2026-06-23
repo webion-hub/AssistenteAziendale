@@ -20,6 +20,8 @@ export interface KnowledgeDoc {
   author: string
   updatedAt: string
   snippets: Snippet[]
+  // Optional AI-generated summary produced when the document is ingested.
+  summary?: string
 }
 
 export interface Role {

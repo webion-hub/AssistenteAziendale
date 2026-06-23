@@ -13,6 +13,8 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/Logo"
+import { AnimatedLogo } from "@/components/AnimatedLogo"
 import { useStore } from "@/store"
 
 export type View = "chat" | "knowledge"
@@ -90,14 +92,16 @@ export function Sidebar({
             <Button
               variant="ghost"
               size="icon"
-              className="hidden md:inline-flex"
+              className="group hidden md:inline-flex"
               onClick={toggleCollapsed}
               aria-label="Espandi menu"
             >
-              <PanelLeft className="size-4" />
+              <Logo className="size-5 group-hover:hidden" />
+              <PanelLeft className="hidden size-4 group-hover:block" />
             </Button>
           ) : (
             <>
+              <AnimatedLogo mode="interactive" className="size-7 shrink-0" />
               <h2 className="flex-1 text-sm font-semibold leading-tight">Corpass</h2>
               <Button
                 variant="ghost"
