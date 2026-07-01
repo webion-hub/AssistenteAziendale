@@ -19,7 +19,7 @@ export function GradientText({
       )}
       style={{
         backgroundImage:
-          "linear-gradient(90deg,#1B4F9C,#2E7FD4,#5B9BD5,#2E7FD4,#1B4F9C)",
+          "linear-gradient(90deg,#1B4F9C,#2E7FD4,#5B9BD5,#8FC5F2,#5B9BD5,#2E7FD4,#1B4F9C)",
       }}
     >
       {children}

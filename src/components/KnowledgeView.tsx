@@ -127,13 +127,10 @@ export function KnowledgeView({
                 </CardHeader>
                 <CardContent className="px-5">
                   <p className="line-clamp-2 text-xs text-muted-foreground">
-                    {doc.summary || doc.snippets[0]?.body}
+                    {doc.summary || doc.content.slice(0, 160)}
                   </p>
                   <div className="mt-3 flex items-center gap-2">
                     <Badge variant="secondary">{doc.category}</Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {doc.snippets.length} sezioni
-                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -200,25 +197,20 @@ function DocDetail({
 
       <ScrollArea className="flex-1">
         <div className="mx-auto max-w-3xl space-y-4 p-4 sm:p-6">
-          {doc.snippets.map((s, i) => (
-            <Card key={s.id} className="gap-3 py-5">
+          {doc.summary && (
+            <Card className="gap-3 py-5">
               <CardHeader className="px-5">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <span className="inline-flex size-5 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary">
-                    {i + 1}
-                  </span>
-                  {s.heading}
-                </CardTitle>
+                <CardTitle className="text-sm">Riepilogo</CardTitle>
               </CardHeader>
               <CardContent className="px-5">
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                  {s.body}
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {doc.summary}
                 </p>
-                {s.tags.length > 0 && (
+                {doc.tags && doc.tags.length > 0 && (
                   <>
                     <Separator className="my-3" />
                     <div className="flex flex-wrap gap-1">
-                      {s.tags.slice(0, 8).map((t) => (
+                      {doc.tags.slice(0, 12).map((t) => (
                         <span
                           key={t}
                           className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
@@ -231,7 +223,35 @@ function DocDetail({
                 )}
               </CardContent>
             </Card>
-          ))}
+          )}
+
+          {doc.snippets && doc.snippets.length > 0 ? (
+            doc.snippets.map((s, i) => (
+              <Card key={s.id} className="gap-3 py-5">
+                <CardHeader className="px-5">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <span className="inline-flex size-5 items-center justify-center rounded bg-primary/15 text-[11px] font-semibold text-primary">
+                      {i + 1}
+                    </span>
+                    {s.heading}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-5">
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                    {s.body}
+                  </p>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <Card className="py-5">
+              <CardContent className="px-5">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                  {doc.content}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </ScrollArea>
     </div>
@@ -416,13 +436,13 @@ function AddDocForm({ onDone }: { onDone: () => void }) {
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Incolla o scrivi il testo. Separa le sezioni con una riga vuota: ognuna diventa un blocco ricercabile."
+              placeholder="Incolla o scrivi il testo del documento."
               className="min-h-52"
             />
             <p className="text-[11px] text-muted-foreground">
               {useFile
                 ? `Il contenuto verrà estratto automaticamente dall'AI dal file «${fileName}» al salvataggio. Puoi anche scrivere qui del testo per ignorare il file.`
-                : "Il testo viene segmentato in sezioni (separate da righe vuote) e reso ricercabile dall'assistente."}
+                : "Il documento viene salvato per intero: l'assistente legge tutto il testo quando fai una domanda."}
             </p>
           </div>
 

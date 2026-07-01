@@ -163,7 +163,16 @@ export function ChatView({ onOpenDoc }: { onOpenDoc: (docId: string) => void }) 
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
+      {/* Soft ambient gradient behind the conversation. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(ellipse 90% 55% at 50% -8%, color-mix(in oklch, var(--primary) 12%, transparent), transparent 60%), radial-gradient(ellipse 70% 45% at 100% 108%, color-mix(in oklch, var(--primary) 7%, transparent), transparent 60%)",
+        }}
+      />
       <ScrollArea className="flex-1" viewportRef={viewportRef}>
         <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
           {messages.map((msg) => (
@@ -239,7 +248,7 @@ function MessageBubble({
               <span className="text-xs text-muted-foreground">Fonti:</span>
               {msg.citations.map((c) => (
                 <button
-                  key={c.snippetId}
+                  key={c.docId}
                   onClick={() => onOpenDoc(c.docId)}
                   className="group inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 text-left text-xs transition-colors hover:border-primary/50 hover:bg-accent cursor-pointer"
                 >

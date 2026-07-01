@@ -6,19 +6,23 @@ import { Header } from "@/components/Header"
 import { Button } from "@/components/ui/button"
 import { ChatView } from "@/components/ChatView"
 import { KnowledgeView } from "@/components/KnowledgeView"
+import { Landing } from "@/components/Landing"
 import { AppProvider, useStore } from "@/store"
 
-function Shell() {
+function Shell({
+  dark,
+  toggleDark,
+  onHome,
+}: {
+  dark: boolean
+  toggleDark: () => void
+  onHome: () => void
+}) {
   const { clearActiveChat, openChat } = useStore()
   const [view, setView] = React.useState<View>("chat")
   const [focusDocId, setFocusDocId] = React.useState<string | null>(null)
-  const [dark, setDark] = React.useState(false)
   const [navOpen, setNavOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(false)
-
-  React.useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark)
-  }, [dark])
 
   const openDoc = (docId: string) => {
     setFocusDocId(docId)
@@ -43,13 +47,14 @@ function Shell() {
         view={view}
         setView={setView}
         dark={dark}
-        toggleDark={() => setDark((d) => !d)}
+        toggleDark={toggleDark}
         mobileOpen={navOpen}
         onClose={() => setNavOpen(false)}
         collapsed={collapsed}
         toggleCollapsed={() => setCollapsed((c) => !c)}
         onNewChat={handleNewChat}
         onOpenChat={handleOpenChat}
+        onHome={onHome}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile app bar */}
@@ -82,9 +87,56 @@ function Shell() {
 }
 
 function App() {
+  const [mode, setMode] = React.useState<"landing" | "app">("landing")
+
+  // Theme lives at the app root so it applies to both the landing page and the
+  // demo. Starts `true` to match the statically dark-rendered HTML (no
+  // hydration mismatch); the stored preference is adopted right after mount.
+  const [dark, setDark] = React.useState(true)
+
+  React.useEffect(() => {
+    let stored: string | null = null
+    try {
+      stored = localStorage.getItem("theme")
+    } catch {
+      // ignore — storage may be unavailable
+    }
+    const isDark = stored ? stored === "dark" : true
+    document.documentElement.classList.toggle("dark", isDark)
+    // Legitimate one-off sync of the persisted theme after mount; initializing
+    // from localStorage during render would cause a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDark(isDark)
+  }, [])
+
+  const toggleDark = React.useCallback(() => {
+    setDark((prev) => {
+      const next = !prev
+      document.documentElement.classList.toggle("dark", next)
+      try {
+        localStorage.setItem("theme", next ? "dark" : "light")
+      } catch {
+        // ignore — persistence is best-effort
+      }
+      return next
+    })
+  }, [])
+
   return (
     <AppProvider>
-      <Shell />
+      {mode === "landing" ? (
+        <Landing
+          onEnter={() => setMode("app")}
+          dark={dark}
+          toggleDark={toggleDark}
+        />
+      ) : (
+        <Shell
+          dark={dark}
+          toggleDark={toggleDark}
+          onHome={() => setMode("landing")}
+        />
+      )}
     </AppProvider>
   )
 }

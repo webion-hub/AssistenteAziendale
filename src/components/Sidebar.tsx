@@ -43,6 +43,7 @@ export function Sidebar({
   toggleCollapsed,
   onNewChat,
   onOpenChat,
+  onHome,
 }: {
   view: View
   setView: (v: View) => void
@@ -54,6 +55,7 @@ export function Sidebar({
   toggleCollapsed: () => void
   onNewChat: () => void
   onOpenChat: (id: string) => void
+  onHome: () => void
 }) {
   const { conversations, activeChatId, deleteChat } = useStore()
 
@@ -101,8 +103,14 @@ export function Sidebar({
             </Button>
           ) : (
             <>
-              <AnimatedLogo mode="interactive" className="size-7 shrink-0" />
-              <h2 className="flex-1 text-sm font-semibold leading-tight">Corpass</h2>
+              <button
+                onClick={onHome}
+                title="Torna alla home"
+                className="flex flex-1 items-center gap-2.5 rounded-lg text-left transition-opacity hover:opacity-80 cursor-pointer"
+              >
+                <AnimatedLogo mode="interactive" className="size-7 shrink-0" />
+                <h2 className="text-sm font-semibold leading-tight">Corpass</h2>
+              </button>
               <Button
                 variant="ghost"
                 size="icon"

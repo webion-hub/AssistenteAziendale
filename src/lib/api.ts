@@ -1,4 +1,4 @@
-import { retrieve, type Citation } from "@/lib/assistant"
+import { retrieveDocs, type Citation } from "@/lib/assistant"
 import type { KnowledgeDoc } from "@/data/knowledge"
 
 export interface ChatResult {
@@ -24,27 +24,27 @@ export interface AnalyzeInput {
 }
 
 /**
- * Ask the backend AI a question, grounded in the most relevant snippets from
- * the knowledge base. Retrieval runs client-side; only the selected context is
- * sent to the server.
+ * Ask the backend AI a question, grounded in the most relevant documents from
+ * the knowledge base. Document-level retrieval runs client-side; the FULL text
+ * of each selected document is sent to the server so the model can search
+ * across the whole content.
  */
 export async function askAI(
   question: string,
   docs: KnowledgeDoc[]
 ): Promise<ChatResult> {
-  const matches = retrieve(question, docs)
+  const matches = retrieveDocs(question, docs)
 
   const context = matches.map((m) => ({
-    heading: m.snippet.heading,
-    body: m.snippet.body,
+    title: m.doc.title,
+    content: m.doc.content,
   }))
 
   const citations: Citation[] = matches.map((m, i) => ({
     index: i + 1,
     docId: m.doc.id,
     docTitle: m.doc.title,
-    snippetId: m.snippet.id,
-    heading: m.snippet.heading,
+    heading: m.doc.title,
   }))
 
   const res = await fetch("/api/chat", {
