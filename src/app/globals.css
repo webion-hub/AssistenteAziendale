@@ -11,57 +11,60 @@
   --card-foreground: oklch(0.18 0.01 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.01 260);
-  --primary: oklch(0.55 0.18 264);
-  --primary-foreground: oklch(0.98 0.01 264);
-  --secondary: oklch(0.96 0.01 260);
-  --secondary-foreground: oklch(0.22 0.01 260);
-  --muted: oklch(0.96 0.01 260);
-  --muted-foreground: oklch(0.52 0.02 260);
-  --accent: oklch(0.95 0.03 264);
-  --accent-foreground: oklch(0.3 0.1 264);
+  --primary: oklch(0.55 0.18 252);
+  --primary-foreground: oklch(0.98 0.01 252);
+  --secondary: oklch(0.96 0.01 258);
+  --secondary-foreground: oklch(0.22 0.01 258);
+  --muted: oklch(0.96 0.01 258);
+  --muted-foreground: oklch(0.52 0.02 258);
+  --accent: oklch(0.95 0.03 252);
+  --accent-foreground: oklch(0.3 0.1 252);
   --destructive: oklch(0.58 0.22 27);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.92 0.005 260);
-  --input: oklch(0.92 0.005 260);
-  --ring: oklch(0.55 0.18 264);
-  --sidebar: oklch(0.985 0.003 260);
-  --sidebar-foreground: oklch(0.18 0.01 260);
-  --sidebar-primary: oklch(0.55 0.18 264);
-  --sidebar-primary-foreground: oklch(0.98 0.01 264);
-  --sidebar-accent: oklch(0.95 0.03 264);
-  --sidebar-accent-foreground: oklch(0.3 0.1 264);
-  --sidebar-border: oklch(0.92 0.005 260);
-  --sidebar-ring: oklch(0.55 0.18 264);
+  --border: oklch(0.92 0.005 258);
+  --input: oklch(0.92 0.005 258);
+  --ring: oklch(0.55 0.18 252);
+  --sidebar: oklch(0.985 0.003 258);
+  --sidebar-foreground: oklch(0.18 0.01 258);
+  --sidebar-primary: oklch(0.55 0.18 252);
+  --sidebar-primary-foreground: oklch(0.98 0.01 252);
+  --sidebar-accent: oklch(0.95 0.03 252);
+  --sidebar-accent-foreground: oklch(0.3 0.1 252);
+  --sidebar-border: oklch(0.92 0.005 258);
+  --sidebar-ring: oklch(0.55 0.18 252);
 }
 
+/* Anthracite dark theme (default). Cool neutral grays in the logo's blue-gray
+   family (like the compass ring #868D96), with an electric azure accent
+   derived from the logo blue #2E7FD4. */
 .dark {
-  --background: oklch(0.16 0.01 260);
-  --foreground: oklch(0.96 0.005 260);
-  --card: oklch(0.2 0.01 260);
-  --card-foreground: oklch(0.96 0.005 260);
-  --popover: oklch(0.2 0.01 260);
-  --popover-foreground: oklch(0.96 0.005 260);
-  --primary: oklch(0.7 0.16 264);
-  --primary-foreground: oklch(0.18 0.05 264);
-  --secondary: oklch(0.27 0.01 260);
-  --secondary-foreground: oklch(0.96 0.005 260);
-  --muted: oklch(0.27 0.01 260);
-  --muted-foreground: oklch(0.68 0.02 260);
-  --accent: oklch(0.3 0.05 264);
-  --accent-foreground: oklch(0.92 0.03 264);
-  --destructive: oklch(0.65 0.2 27);
+  --background: oklch(0.235 0.008 258);
+  --foreground: oklch(0.96 0.005 258);
+  --card: oklch(0.285 0.01 258);
+  --card-foreground: oklch(0.96 0.005 258);
+  --popover: oklch(0.285 0.01 258);
+  --popover-foreground: oklch(0.96 0.005 258);
+  --primary: oklch(0.72 0.15 252);
+  --primary-foreground: oklch(0.17 0.02 258);
+  --secondary: oklch(0.31 0.01 258);
+  --secondary-foreground: oklch(0.96 0.005 258);
+  --muted: oklch(0.31 0.01 258);
+  --muted-foreground: oklch(0.73 0.015 258);
+  --accent: oklch(0.36 0.055 252);
+  --accent-foreground: oklch(0.92 0.04 252);
+  --destructive: oklch(0.62 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.7 0.16 264);
-  --sidebar: oklch(0.2 0.01 260);
-  --sidebar-foreground: oklch(0.96 0.005 260);
-  --sidebar-primary: oklch(0.7 0.16 264);
-  --sidebar-primary-foreground: oklch(0.18 0.05 264);
-  --sidebar-accent: oklch(0.3 0.05 264);
-  --sidebar-accent-foreground: oklch(0.92 0.03 264);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.72 0.15 252);
+  --sidebar: oklch(0.185 0.008 258);
+  --sidebar-foreground: oklch(0.96 0.005 258);
+  --sidebar-primary: oklch(0.72 0.15 252);
+  --sidebar-primary-foreground: oklch(0.17 0.02 258);
+  --sidebar-accent: oklch(0.33 0.05 252);
+  --sidebar-accent-foreground: oklch(0.92 0.04 252);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.7 0.16 264);
+  --sidebar-ring: oklch(0.72 0.15 252);
 }
 
 @theme inline {
@@ -108,6 +111,23 @@
     color: var(--foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
+  }
+  /* Ambient depth on the anthracite theme: soft azure glows (logo blues)
+     anchored to the viewport so the whole app reads as lit, not flat. */
+  .dark body {
+    background-image:
+      radial-gradient(
+        ellipse 90% 55% at 50% -12%,
+        oklch(0.7 0.145 252 / 0.13),
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 70% 55% at 108% 108%,
+        oklch(0.55 0.14 255 / 0.1),
+        transparent 60%
+      );
+    background-attachment: fixed;
+    background-repeat: no-repeat;
   }
 }
 

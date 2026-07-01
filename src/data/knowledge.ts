@@ -19,9 +19,16 @@ export interface KnowledgeDoc {
   sourceType: SourceType
   author: string
   updatedAt: string
-  snippets: Snippet[]
+  // Full document text — kept whole (not chunked) so the assistant can search
+  // across the entire content when answering.
+  content: string
+  // Optional structured sections. Seed docs are authored as sections for a
+  // richer detail view; uploaded documents are stored as plain `content`.
+  snippets?: Snippet[]
   // Optional AI-generated summary produced when the document is ingested.
   summary?: string
+  // Keywords used for lightweight document-level relevance ranking.
+  tags?: string[]
 }
 
 export interface Role {
@@ -33,7 +40,11 @@ export interface Role {
   checklist: string[]
 }
 
-export const seedDocs: KnowledgeDoc[] = [
+// Seed docs are authored as structured sections. `content` and `tags` are
+// derived from those sections below so they behave like uploaded documents.
+type SeedDoc = Omit<KnowledgeDoc, "content" | "tags"> & { snippets: Snippet[] }
+
+const seedDocsRaw: SeedDoc[] = [
   {
     id: "fe-guidelines",
     title: "Linee guida di programmazione — Frontend",
@@ -187,6 +198,12 @@ export const seedDocs: KnowledgeDoc[] = [
     ],
   },
 ]
+
+export const seedDocs: KnowledgeDoc[] = seedDocsRaw.map((doc) => ({
+  ...doc,
+  content: doc.snippets.map((s) => `## ${s.heading}\n\n${s.body}`).join("\n\n"),
+  tags: Array.from(new Set(doc.snippets.flatMap((s) => s.tags))),
+}))
 
 export const roles: Role[] = [
   {

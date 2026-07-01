@@ -15,7 +15,7 @@ export function Header({ view }: { view: View }) {
       : activeChat?.title ?? "Nuova conversazione"
 
   return (
-    <header className="hidden h-16 shrink-0 items-center gap-4 border-b border-border bg-background/80 px-6 backdrop-blur md:flex">
+    <header className="hidden h-16 shrink-0 items-center gap-4 border-b border-border bg-card/60 px-6 backdrop-blur md:flex">
       {/* Current chat / section name */}
       <p className="min-w-0 flex-1 truncate text-sm font-semibold">{title}</p>
 

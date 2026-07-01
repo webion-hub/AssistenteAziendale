@@ -1,3 +1,5 @@
+import type * as React from "react"
+
 import { cn } from "@/lib/utils"
 
 /**
@@ -10,11 +12,13 @@ export function Logo({
   starClassName,
   ringClassName,
   needleClassName,
+  needleRef,
 }: {
   className?: string
   starClassName?: string
   ringClassName?: string
   needleClassName?: string
+  needleRef?: React.Ref<SVGGElement>
 }) {
   return (
     <svg
@@ -56,7 +60,7 @@ export function Logo({
       </g>
 
       {/* Navigation needle */}
-      <g className={cn("logo-pivot", needleClassName)}>
+      <g ref={needleRef} className={cn("logo-pivot", needleClassName)}>
         <polygon points="100,66 76,126 100,112" fill="#5B9BD5" />
         <polygon points="100,66 124,126 100,112" fill="#1B4F9C" />
       </g>

@@ -1,10 +1,9 @@
-import type { KnowledgeDoc, Snippet } from "@/data/knowledge"
+import type { KnowledgeDoc } from "@/data/knowledge"
 
 export interface Citation {
   index: number
   docId: string
   docTitle: string
-  snippetId: string
   heading: string
 }
 
@@ -14,9 +13,8 @@ export interface AssistantAnswer {
   confidence: "alta" | "media" | "nessuna"
 }
 
-interface ScoredSnippet {
+export interface ScoredDoc {
   doc: KnowledgeDoc
-  snippet: Snippet
   score: number
 }
 
@@ -37,67 +35,33 @@ function normalize(text: string): string[] {
     .filter((t) => t.length > 1 && !STOP_WORDS.has(t))
 }
 
-export function retrieve(query: string, docs: KnowledgeDoc[]): ScoredSnippet[] {
+// Rank whole documents by relevance to the query. Scoring runs over the entire
+// document (title + summary + full content + tags), so a document matches even
+// when the relevant passage is buried anywhere in the text.
+export function retrieveDocs(query: string, docs: KnowledgeDoc[]): ScoredDoc[] {
   const tokens = normalize(query)
   if (tokens.length === 0) return []
 
-  const scored = docs.flatMap((doc) =>
-    doc.snippets.map((snippet) => {
-      const haystackTags = snippet.tags.map((t) => t.toLowerCase())
-      const haystackText = `${snippet.heading} ${snippet.body}`.toLowerCase()
+  const scored = docs.map((doc) => {
+    const haystackTags = (doc.tags ?? []).map((t) => t.toLowerCase())
+    const haystackText = `${doc.title} ${doc.summary ?? ""} ${doc.content}`.toLowerCase()
 
-      const score = tokens.reduce((acc, token) => {
-        const tagHit = haystackTags.some(
-          (tag) => tag === token || tag.includes(token) || token.includes(tag)
-        )
-        const headingHit = snippet.heading.toLowerCase().includes(token)
-        const bodyHit = haystackText.includes(token)
-        return acc + (tagHit ? 3 : 0) + (headingHit ? 2 : 0) + (bodyHit ? 1 : 0)
-      }, 0)
+    const score = tokens.reduce((acc, token) => {
+      const tagHit = haystackTags.some(
+        (tag) => tag === token || tag.includes(token) || token.includes(tag)
+      )
+      const titleHit = doc.title.toLowerCase().includes(token)
+      const bodyHit = haystackText.includes(token)
+      return acc + (tagHit ? 3 : 0) + (titleHit ? 2 : 0) + (bodyHit ? 1 : 0)
+    }, 0)
 
-      return { doc, snippet, score }
-    })
-  )
+    return { doc, score }
+  })
 
   return scored
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-}
-
-export function answer(query: string, docs: KnowledgeDoc[]): AssistantAnswer {
-  const matches = retrieve(query, docs)
-
-  if (matches.length === 0) {
-    return {
-      text: "Non ho trovato nulla di pertinente nella base di conoscenza aziendale. Prova a riformulare la domanda, oppure carica un documento che copra questo argomento dalla sezione \"Base di conoscenza\".",
-      citations: [],
-      confidence: "nessuna",
-    }
-  }
-
-  const citations: Citation[] = matches.map((m, i) => ({
-    index: i + 1,
-    docId: m.doc.id,
-    docTitle: m.doc.title,
-    snippetId: m.snippet.id,
-    heading: m.snippet.heading,
-  }))
-
-  const intro =
-    matches[0].score >= 6
-      ? "Ecco cosa dicono le linee guida aziendali:"
-      : "Ho trovato alcuni riferimenti che potrebbero aiutarti:"
-
-  const bodyParts = matches.map(
-    (m, i) => `**${m.snippet.heading}** [${i + 1}]\n${m.snippet.body}`
-  )
-
-  return {
-    text: `${intro}\n\n${bodyParts.join("\n\n")}`,
-    citations,
-    confidence: matches[0].score >= 6 ? "alta" : "media",
-  }
+    .slice(0, 4)
 }
 
 export const suggestedQuestions = [

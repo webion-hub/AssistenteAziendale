@@ -42,45 +42,13 @@ interface AppStore {
 
 const AppContext = React.createContext<AppStore | null>(null)
 
-// Split free text into snippet "chunks" — mimics how an ingestion pipeline
-// would segment a document before embedding it.
-function chunk(body: string, title: string): KnowledgeDoc["snippets"] {
-  const blocks = body
-    .split(/\n\s*\n/)
-    .map((b) => b.trim())
-    .filter(Boolean)
-
-  const source = blocks.length > 0 ? blocks : [body.trim()]
-
-  return source.map((block, i) => {
-    const firstLine = block.split("\n")[0].slice(0, 60)
-    const words = block
-      .toLowerCase()
-      .replace(/[^\p{L}\s]/gu, " ")
-      .split(/\s+/)
-      .filter((w) => w.length > 3)
-    return {
-      id: `chunk-${i}`,
-      heading: firstLine || `${title} — parte ${i + 1}`,
-      body: block,
-      tags: Array.from(new Set(words)).slice(0, 30),
-    }
-  })
-}
-
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [docs, setDocs] = React.useState<KnowledgeDoc[]>(seedDocs)
 
   const addDoc = React.useCallback((input: NewDocInput) => {
     const id = `doc-${input.title.toLowerCase().replace(/\s+/g, "-").slice(0, 20)}-${docCounter()}`
-    const snippets = chunk(input.body, input.title)
-    // Fold the AI-suggested tags into every snippet so retrieval picks them up.
-    const aiTags = input.aiTags ?? []
-    if (aiTags.length > 0) {
-      for (const s of snippets) {
-        s.tags = Array.from(new Set([...s.tags, ...aiTags])).slice(0, 40)
-      }
-    }
+    // Store the document whole. No chunking: the assistant reads the full
+    // content when answering, so information is never lost to a bad split.
     const newDoc: KnowledgeDoc = {
       id,
       title: input.title,
@@ -88,8 +56,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sourceType: input.sourceType,
       author: "Caricato da te",
       updatedAt: new Date().toISOString().slice(0, 10),
-      snippets,
+      content: input.body.trim(),
       summary: input.summary,
+      tags: input.aiTags ?? [],
     }
     setDocs((prev) => [newDoc, ...prev])
   }, [])

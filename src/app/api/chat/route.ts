@@ -4,9 +4,9 @@ import { CHAT_MODEL, claudeAttivo, getClient, textFrom } from "@/lib/claude"
 
 export const runtime = "nodejs"
 
-interface ContextSnippet {
-  heading: string
-  body: string
+interface ContextDoc {
+  title: string
+  content: string
 }
 
 // AI #1: answer questions grounded in the knowledge base.
@@ -33,12 +33,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Campo 'question' mancante." }, { status: 400 })
   }
 
-  const sources: ContextSnippet[] = Array.isArray(body.context)
-    ? (body.context as ContextSnippet[])
+  const sources: ContextDoc[] = Array.isArray(body.context)
+    ? (body.context as ContextDoc[])
     : []
 
   const contextBlock = sources.length
-    ? sources.map((s, i) => `[${i + 1}] ${s.heading}\n${s.body}`).join("\n\n")
+    ? sources
+        .map(
+          (s, i) =>
+            `[${i + 1}] Documento: ${s.title}\n--- inizio documento ---\n${s.content}\n--- fine documento ---`
+        )
+        .join("\n\n")
     : "(nessun documento pertinente trovato)"
 
   const system = [
@@ -46,6 +51,8 @@ export async function POST(req: Request) {
     "linee guida e standard di programmazione.",
     "Regole:",
     "- Rispondi SOLO basandoti sui documenti forniti qui sotto.",
+    "- Ogni documento è riportato integralmente: leggi TUTTO il contenuto e",
+    "  cerca l'informazione richiesta in qualunque punto del testo.",
     "- Se i documenti non contengono la risposta, dillo chiaramente e non inventare.",
     "- Cita le fonti usate con la notazione [n] corrispondente al documento.",
     "- Rispondi in italiano, in modo conciso e professionale. Usa markdown.",
@@ -57,7 +64,7 @@ export async function POST(req: Request) {
   try {
     const message = await getClient().messages.create({
       model: CHAT_MODEL,
-      max_tokens: 1024,
+      max_tokens: 2048,
       system,
       messages: [{ role: "user", content: question }],
     })

@@ -16,8 +16,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Default to the anthracite dark theme: `dark` is applied statically so the
+  // server-rendered HTML and the first client render match (no flash, no
+  // hydration mismatch). A stored "light" preference is applied after mount.
   return (
-    <html lang="it">
+    <html lang="it" className="dark" suppressHydrationWarning>
       <body>{children}</body>
     </html>
   )
